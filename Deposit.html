@@ -19,52 +19,6 @@
       max-width: 600px;
       margin: auto;
     }
-<div id="signature-tip" style="display: none;">
-  <div style="
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  ">
-    <div style="
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      max-width: 90%;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      animation: fadeIn 0.3s ease;
-    ">
-      <img src="SIGNTIP.png" alt="簽名提醒圖示" style="width: 120px; margin-bottom: 1rem;" />
-      <p style="font-size: 1rem; color: #333; line-height: 1.6;">
-        小提醒：若您使用 iPhone，<br>
-        可用一隻手輕觸螢幕固定畫面，<br>
-        另一隻手輕鬆簽名！
-      </p>
-      <button onclick="closeTip()" style="
-        margin-top: 1rem;
-        padding: 0.5rem 1rem;
-        background: #111;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-      ">我知道了</button>
-    </div>
-  </div>
-</div>
-
-<style>
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-</style>
 
     h2 {
       color: #00C300;
@@ -350,23 +304,6 @@ function shareToLine() {
   window.location.href = `https://line.me/R/msg/text/?${text}%0A${encodeURIComponent(url)}`;
 }
 
-let tipShown = false;
-
-function showSignatureTip() {
-  if (!tipShown && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    document.getElementById('signature-tip').style.display = 'block';
-    tipShown = true;
-  }
-}
-
-function closeTip() {
-  document.getElementById('signature-tip').style.display = 'none';
-}
-
-// 只觸發一次
-canvas.addEventListener('touchstart', () => {
-  showSignatureTip();
-}, { once: true });
 
     function submitForm() {
       // 驗證必填欄位
