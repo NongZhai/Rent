@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>租屋定金收據（簽署版）</title>
   <style>
     body {
@@ -134,45 +134,45 @@
 
   <div class="container" id="form-container">
     <h2>租屋定金收據</h2>
-    <div class="section-title">一、出租方／代理人預填資料（不可修改）</div>
-    <label>出租方／代理人</label>
+
+    <div class="section-title">一、出租人（甲方）資料</div>
+    <label>出租方／代理人：</label>
     <input type="text" id="name">
-    <label>租屋地址</label>
+    <label>租賃地址：</label>
     <input type="text" id="addr">
-    <label>租期（起）</label>
-    <input type="text" id="start">
-    <label>租期（迄）</label>
-    <input type="text" id="end">
-    <label>月租金</label>
+    <label>租金（新台幣）：</label>
     <input type="number" id="rent" min="0" step="1">
-    <label>定金金額</label>
+    <label>訂金（新台幣）：</label>
     <input type="number" id="deposit" min="0" step="1">
-    <label>房東 Email</label>
+    <label>收訂後保留10天至：</label>
+    <input type="date" id="reserve_date">
+    <label>出租人 Email：</label>
     <input type="email" id="landlord_email">
+    <label>備註</label>
+    <textarea id="tenant_note" placeholder="如有其他說明事項，請在此填寫" rows="3" style="resize: vertical;"></textarea>
     <div class="button-group">
-      <button onclick="shareToLine()">房東填寫完畢 ➜LINE 傳送給租客</button>
+      <button onclick="shareToLine()">出租人填寫完畢 ➜ LINE 傳送給租客</button>
     </div>
 
-    <div class="section-title">二、承租人填寫資訊</div>
+    <div class="section-title">二、承租人（乙方）資料</div>
     <label>承租人姓名</label>
     <input type="text" id="tenant_name" placeholder="請輸入姓名">
     <label>聯絡電話</label>
     <input type="tel" id="tenant_phone" placeholder="請輸入電話">
     <label>電子信箱</label>
     <input type="email" id="tenant_email" placeholder="請輸入 Email">
-    <label>備註（如有）</label>
-    <textarea id="tenant_note" placeholder="如有其他說明事項，請在此填寫" rows="3" style="resize: vertical;"></textarea>
 
     <div class="section-title">三、承租人條款同意確認</div>
     <div class="clause-box">
       <ul style="padding-left: 1.2rem; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+        <li>訂金為保留租賃意願之用，一旦審核通過即成立契約預約。</li>
+        <li>若於保留期間內，因甲方（承租人）之事由致不能履行時，定金不得請求返還。</li>
+        <li>若乙方同意後，因乙方之事由致不能履行時，應雙倍返還定金。</li>
         <li>本租期為一年。</li>
         <li>仲介服務費為半個月租金，於簽約當日一併支付。</li>
-        <li>訂金為保留租賃意願之用，一旦審核通過即成立契約預約。</li>
-        <li>若出租人(甲方)同意後，因甲方之事由致不能履行時，應雙倍返還定金。</li>
-    <li>若於保留期間內，因乙方（承租人）之事由致不能履行時，定金不得請求返還。</li>
       </ul>
     </div>
+
     <div class="checkbox-group">
       <label><input type="checkbox" id="check1">我了解並同意相關仲介服務費條款。</label>
       <label><input type="checkbox" id="check2">我已詳細閱讀並同意上述條款內容，並確認提供資料為真實無誤。</label>
@@ -197,112 +197,108 @@
 
   <script>
     let signaturePad;
-    
-    // 頁面載入時初始化簽名欄
-    window.addEventListener('DOMContentLoaded', () => {
-      initSignaturePad();
-      loadUrlParams();
-    });
-    
-    function initSignaturePad() {
-      const canvas = document.getElementById('signature-pad');
-      signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
-      resizeCanvas();
-    }
 
-    function resizeCanvas() {
-      const canvas = document.getElementById('signature-pad');
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext("2d").scale(ratio, ratio);
-      
-      // 如果是新建的簽名欄，清除它
-      if (signaturePad) {
-        signaturePad.clear();
+// 初始化
+window.addEventListener('DOMContentLoaded', () => {
+  initSignaturePad();
+  loadUrlParams();
+});
+
+function initSignaturePad() {
+  const canvas = document.getElementById('signature-pad');
+  signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
+  resizeCanvas();
+}
+
+function resizeCanvas() {
+  const canvas = document.getElementById('signature-pad');
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext("2d").scale(ratio, ratio);
+  if (signaturePad) signaturePad.clear();
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+function clearSignature() {
+  signaturePad.clear();
+}
+
+// ✅ URL 參數自動填入欄位（新增 reserve_date）
+function loadUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
+  fields.forEach(id => {
+    const input = document.getElementById(id);
+    if (params.has(id)) {
+      input.value = decodeURIComponent(params.get(id));
+      input.setAttribute('readonly', true);
+    } else {
+      input.setAttribute('required', true);
+    }
+  });
+}
+
+// ✅ 傳送 LINE 並帶入 reserve_date 日期
+function shareToLine() {
+  const requiredFields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
+  let missingFields = [];
+
+  requiredFields.forEach(id => {
+    const input = document.getElementById(id);
+    const value = input.value.trim();
+    if (!value) {
+      input.style.borderColor = 'red';
+      input.style.backgroundColor = '#fff5f5';
+      switch (id) {
+        case 'name': missingFields.push('出租方／代理人'); break;
+        case 'addr': missingFields.push('租賃地址'); break;
+        case 'rent': missingFields.push('租金（新台幣）'); break;
+        case 'deposit': missingFields.push('訂金（新台幣）'); break;
+        case 'landlord_email': missingFields.push('出租人 Email'); break;
+        case 'reserve_date': missingFields.push('保留截止日期'); break;
       }
+    } else {
+      input.style.borderColor = '#ccc';
+      input.style.backgroundColor = '#fff';
     }
-    
-    window.addEventListener("resize", resizeCanvas);
+  });
 
-    function clearSignature() {
-      signaturePad.clear();
-    }
+  if (missingFields.length > 0) {
+    alert(`請填寫以下欄位：\n${missingFields.join('\n')}`);
+    return;
+  }
 
-    function loadUrlParams() {
-      const params = new URLSearchParams(window.location.search);
-      const fields = ['name', 'addr', 'start', 'end', 'rent', 'deposit', 'landlord_email'];
-      
-      fields.forEach(id => {
-        const input = document.getElementById(id);
-        if (params.has(id)) {
-          input.value = decodeURIComponent(params.get(id));
-          input.setAttribute('readonly', true);
-        } else {
-          input.setAttribute('required', true);
-        }
-      });
-    }
+  const numberRegex = /^\d+$/;
+  if (!numberRegex.test(document.getElementById('rent').value.trim())) {
+    alert("租金請輸入數字！");
+    document.getElementById('rent').style.borderColor = 'red';
+    return;
+  }
+  if (!numberRegex.test(document.getElementById('deposit').value.trim())) {
+    alert("訂金請輸入數字！");
+    document.getElementById('deposit').style.borderColor = 'red';
+    return;
+  }
 
-    function shareToLine() {
-      const requiredFields = ['name', 'addr', 'start', 'end', 'rent', 'deposit', 'landlord_email'];
-      let missingFields = [];
+  // 將所有欄位加入網址參數
+  const params = new URLSearchParams({
+    name: document.getElementById('name').value,
+    addr: document.getElementById('addr').value,
+    rent: document.getElementById('rent').value,
+    deposit: document.getElementById('deposit').value,
+    landlord_email: document.getElementById('landlord_email').value,
+    reserve_date: document.getElementById('reserve_date').value,
+    tenant_note: document.getElementById('tenant_note').value
+  });
 
-      requiredFields.forEach(id => {
-        const input = document.getElementById(id);
-        const value = input.value.trim();
+  const base = window.location.origin + window.location.pathname;
+  const url = `${base}?${params.toString()}`;
+  const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：');
+  window.location.href = `https://line.me/R/msg/text/?${text}%0A${encodeURIComponent(url)}`;
+}
 
-        if (!value) {
-          input.style.borderColor = 'red';
-          input.style.backgroundColor = '#fff5f5';
-
-          switch (id) {
-            case 'name': missingFields.push('房東 / 仲介姓名'); break;
-            case 'addr': missingFields.push('租屋地址'); break;
-            case 'start': missingFields.push('租期（起）'); break;
-            case 'end': missingFields.push('租期（迄）'); break;
-            case 'rent': missingFields.push('月租金'); break;
-            case 'deposit': missingFields.push('定金金額'); break;
-            case 'landlord_email': missingFields.push('房東 Email'); break;
-          }
-        } else {
-          input.style.borderColor = '#ccc';
-          input.style.backgroundColor = '#fff';
-        }
-      });
-
-      if (missingFields.length > 0) {
-        alert(`請填寫以下欄位：\n${missingFields.join('\n')}`);
-        return;
-      }
-
-      const rentValue = document.getElementById('rent').value.trim();
-      const depositValue = document.getElementById('deposit').value.trim();
-      const numberRegex = /^\d+$/;
-
-      if (!numberRegex.test(rentValue)) {
-        alert("月租金請輸入數字！");
-        document.getElementById('rent').style.borderColor = 'red';
-        return;
-      }
-      if (!numberRegex.test(depositValue)) {
-        alert("定金金額請輸入數字！");
-        document.getElementById('deposit').style.borderColor = 'red';
-        return;
-      }
-
-      const name = encodeURIComponent(document.getElementById('name').value);
-      const addr = encodeURIComponent(document.getElementById('addr').value);
-      const start = encodeURIComponent(document.getElementById('start').value);
-      const end = encodeURIComponent(document.getElementById('end').value);
-      const rent = encodeURIComponent(document.getElementById('rent').value);
-      const deposit = encodeURIComponent(document.getElementById('deposit').value);
-      const landlord_email = encodeURIComponent(document.getElementById('landlord_email').value);
-      const base = window.location.origin + window.location.pathname;
-      const url = `${base}?name=${name}&addr=${addr}&start=${start}&end=${end}&rent=${rent}&deposit=${deposit}&landlord_email=${landlord_email}`;
-      const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：');
-      window.location.href = `https://line.me/R/msg/text/?${text}%0A${encodeURIComponent(url)}`;
-    }
 
     function submitForm() {
       // 驗證必填欄位
