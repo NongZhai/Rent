@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>租屋定金收據（簽署版）</title>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h2 {
+      color: #00C300;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-weight: bold;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    input[readonly] {
+      background: #f1f1f1;
+      color: #555;
+    }
+    .signature-box {
+      border: 1px dashed #999;
+      height: 150px;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      background-color: #fff;
+    }
+    .clause-box {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+    }
+    .checkbox-group {
+      margin-top: 1rem;
+      text-align: left;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      justify-content: flex-start;
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+      word-break: break-word;
+      white-space: normal;
+    }
+    .checkbox-group input[type="checkbox"] {
+      flex-shrink: 0;
+      margin-top: 0.3rem;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+    .button-group {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-direction: column;
+    }
+    button {
+      padding: 0.75rem;
+      background-color: #00C300;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #00a800;
+    }
+    .subtext {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+</head>
+<body>
+  <div id="loading-overlay" class="hidden">
+    <h2>正在生成PDF...</h2>
+    <p>請稍候，處理中</p>
+  </div>
+
+  <div class="container" id="form-container">
+  <!-- ✅ LOGO 區塊 -->
+  <img src="NongzhaiLOGO.jpg" alt="LOGO" style="max-width: 160px; display: block; margin: 0 auto 1.5rem;" />
+
+  <h2>租屋定金收據</h2>
+
+
+    <div class="section-title">一、出租人（甲方）資料</div>
+    <label>出租方／代理人：</label>
+    <input type="text" id="name">
+    <label>租賃地址：</label>
+    <input type="text" id="addr">
+    <label>租金（新台幣）：</label>
+    <input type="number" id="rent" min="0" step="1">
+    <label>訂金（新台幣）：</label>
+    <input type="number" id="deposit" min="0" step="1">
+    <label>收訂後保留10天至：</label>
+    <input type="date" id="reserve_date">
+    <label>出租人 Email：</label>
+    <input type="email" id="landlord_email">
+    <label>備註</label>
+    <textarea id="tenant_note" placeholder="如有其他說明事項，請在此填寫" rows="3" style="resize: vertical;"></textarea>
+    <div class="button-group">
+      <button onclick="shareToLine()">出租人填寫完畢 ➜ LINE 傳送給租客</button>
+    </div>
+
+    <div class="section-title">二、承租人（乙方）資料</div>
+    <label>承租人姓名</label>
+    <input type="text" id="tenant_name" placeholder="請輸入姓名">
+    <label>聯絡電話</label>
+    <input type="tel" id="tenant_phone" placeholder="請輸入電話">
+    <label>電子信箱</label>
+    <input type="email" id="tenant_email" placeholder="請輸入 Email">
+
+    <div class="section-title">三、承租人條款同意確認</div>
+    <div class="clause-box">
+      <ul style="padding-left: 1.2rem; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+        <li>本租期為一年。</li>
+        <li>仲介服務費為半個月租金，於簽約當日一併支付。</li>
+        <li>訂金為保留租賃意願之用，一旦審核通過即成立契約預約。</li>
+        <li>甲方同意後，因甲方之事由致不能履行時，應雙倍返還定金。</li>
+        <li>保留期間內，因乙方之事由致不能履行時，定金不得請求返還。</li>
+      </ul>
+    </div>
+
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="check1">我了解並同意相關仲介服務費條款。</label>
+      <label><input type="checkbox" id="check2">我已詳細閱讀並同意上述條款內容，並確認提供資料為真實無誤。</label>
+      <label><input type="checkbox" id="check3">本人了解，本訂金為租賃意願之擔保，並不代表已完成承租程序，仍需經出租人進行資料審核。</label>
+      <label><input type="checkbox" id="check4">我了解本收據具《民法第249條》所定之法律效力，並同意受其約束。</label>
+    </div>
+
+    <div class="section-title">四、承租人簽名確認</div>
+    <div style="position: relative; width: 100%; max-width: 100%;">
+      <canvas id="signature-pad" class="signature-box" style="width: 100%; max-width: 100%;"></canvas>
+      <span style="position: absolute; top: 10px; left: 16px; color: #aaa; font-size: 0.9rem;">在此簽名</span>
+    </div>
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="email_checkbox"> 同時發送 Email 備份</label>
+    </div>
+    <div class="button-group">
+      <button style="background-color: #ccc; color: #333;" onclick="clearSignature()">清除簽名</button>
+      <button onclick="submitForm()">送出並存為 PDF 檔</button>
+    </div>
+    <p class="subtext">請填寫表單資訊並簽名確認。</p>
+  </div>
+
+  <script>
+    let signaturePad;
+
+// 初始化
+window.addEventListener('DOMContentLoaded', () => {
+  initSignaturePad();
+  loadUrlParams();
+});
+
+function initSignaturePad() {
+  const canvas = document.getElementById('signature-pad');
+  signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
+  resizeCanvas();
+}
+
+function resizeCanvas() {
+  const canvas = document.getElementById('signature-pad');
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext("2d").scale(ratio, ratio);
+  if (signaturePad) signaturePad.clear();
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+function clearSignature() {
+  signaturePad.clear();
+}
+
+// ✅ URL 參數自動填入欄位（新增 reserve_date）
+function loadUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
+  fields.forEach(id => {
+    const input = document.getElementById(id);
+    if (params.has(id)) {
+      input.value = decodeURIComponent(params.get(id));
+      input.setAttribute('readonly', true);
+    } else {
+      input.setAttribute('required', true);
+    }
+  });
+}
+
+// ✅ 傳送 LINE 並帶入 reserve_date 日期
+function shareToLine() {
+  const requiredFields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
+  let missingFields = [];
+
+  requiredFields.forEach(id => {
+    const input = document.getElementById(id);
+    const value = input.value.trim();
+    if (!value) {
+      input.style.borderColor = 'red';
+      input.style.backgroundColor = '#fff5f5';
+      switch (id) {
+        case 'name': missingFields.push('出租方／代理人'); break;
+        case 'addr': missingFields.push('租賃地址'); break;
+        case 'rent': missingFields.push('租金（新台幣）'); break;
+        case 'deposit': missingFields.push('訂金（新台幣）'); break;
+        case 'landlord_email': missingFields.push('出租人 Email'); break;
+        case 'reserve_date': missingFields.push('保留截止日期'); break;
+      }
+    } else {
+      input.style.borderColor = '#ccc';
+      input.style.backgroundColor = '#fff';
+    }
+  });
+
+  if (missingFields.length > 0) {
+    alert(`請填寫以下欄位：\n${missingFields.join('\n')}`);
+    return;
+  }
+
+  const numberRegex = /^\d+$/;
+  if (!numberRegex.test(document.getElementById('rent').value.trim())) {
+    alert("租金請輸入數字！");
+    document.getElementById('rent').style.borderColor = 'red';
+    return;
+  }
+  if (!numberRegex.test(document.getElementById('deposit').value.trim())) {
+    alert("訂金請輸入數字！");
+    document.getElementById('deposit').style.borderColor = 'red';
+    return;
+  }
+
+  // 將所有欄位加入網址參數
+  const params = new URLSearchParams({
+    name: document.getElementById('name').value,
+    addr: document.getElementById('addr').value,
+    rent: document.getElementById('rent').value,
+    deposit: document.getElementById('deposit').value,
+    landlord_email: document.getElementById('landlord_email').value,
+    reserve_date: document.getElementById('reserve_date').value,
+    tenant_note: document.getElementById('tenant_note').value
+  });
+
+  const base = window.location.origin + window.location.pathname;
+  const url = `${base}?${params.toString()}`;
+  const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：');
+  window.location.href = `https://line.me/R/msg/text/?${text}%0A${encodeURIComponent(url)}`;
+}
+
+
+    function submitForm() {
+      // 驗證必填欄位
+      const tenantFields = document.querySelectorAll('#tenant_name, #tenant_phone, #tenant_email');
+      let isValid = true;
+      let missingFields = [];
+
+      tenantFields.forEach(field => {
+        if (field.value.trim() === '') {
+          field.style.borderColor = 'red';
+          field.style.backgroundColor = '#fff5f5';
+          isValid = false;
+          if (field.previousElementSibling) {
+            missingFields.push(field.previousElementSibling.textContent);
+          }
+        } else {
+          field.style.borderColor = '#ccc';
+          field.style.backgroundColor = '#fff';
+        }
+      });
+
+      // 驗證勾選框
+      const checkboxes = document.querySelectorAll('#check1, #check2, #check3, #check4');
+      let uncheckedBoxes = [];
+      
+      checkboxes.forEach((checkbox, index) => {
+        if (!checkbox.checked) {
+          checkbox.parentElement.style.color = 'red';
+          uncheckedBoxes.push(index + 1);
+          isValid = false;
+        } else {
+          checkbox.parentElement.style.color = 'inherit';
+        }
+      });
+
+      if (missingFields.length > 0) {
+        alert(`請填寫以下欄位：\n${missingFields.join('\n')}`);
+        return;
+      }
+
+      if (uncheckedBoxes.length > 0) {
+        alert("請確認並勾選所有條款選項");
+        return;
+      }
+
+      // 驗證簽名
+      if (signaturePad.isEmpty()) {
+        alert("請在簽名欄上簽名");
+        document.getElementById('signature-pad').style.borderColor = 'red';
+        return;
+      } else {
+        document.getElementById('signature-pad').style.borderColor = '#999';
+      }
+
+      // 顯示載入畫面
+      document.getElementById('loading-overlay').classList.remove('hidden');
+      
+      // 生成PDF
+      setTimeout(() => {
+        generatePDF();
+        
+        // 發送電子郵件(如果勾選)
+        const sendEmail = document.getElementById('email_checkbox').checked;
+        if (sendEmail) {
+          sendEmailWithPDF();
+        }
+      }, 100);
+    }
+
+    function generatePDF() {
+      const container = document.getElementById('form-container');
+      
+      // 使用html2canvas將整個表單轉換為圖片
+      html2canvas(container, {
+        scale: 2, // 提高圖像質量
+        logging: false,
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF('p', 'mm', 'a4');
+          
+          // 將畫布轉換為圖片
+          const imgData = canvas.toDataURL('image/png');
+          
+          // 計算適當的大小來適應 A4 紙張
+          const imgWidth = 210; // A4 寬度 (mm)
+          const pageHeight = 297; // A4 高度 (mm)
+          const imgHeight = canvas.height * imgWidth / canvas.width;
+          let heightLeft = imgHeight;
+          let position = 0;
+          
+          // 添加第一頁圖片
+          doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+          
+          // 如果內容超過一頁，添加新頁面
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            doc.addPage();
+            doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+          
+          // 生成檔案名稱
+          const now = new Date();
+          const dateStr = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
+          const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+          const tenantName = document.getElementById('tenant_name').value || '租客';
+          const fileName = `租屋定金收據_${tenantName}_${dateStr}_${timeStr}.pdf`;
+          
+          // 儲存PDF
+          doc.save(fileName);
+          
+          // 隱藏載入畫面
+          document.getElementById('loading-overlay').classList.add('hidden');
+          
+          // 顯示成功訊息
+          alert('PDF 已成功儲存！');
+        } catch (error) {
+          console.error('PDF生成錯誤:', error);
+          document.getElementById('loading-overlay').classList.add('hidden');
+          alert('PDF生成失敗，請重試: ' + error.message);
+        }
+      }).catch(error => {
+        console.error('畫布生成錯誤:', error);
+        document.getElementById('loading-overlay').classList.add('hidden');
+        alert('PDF生成失敗，請重試: ' + error.message);
+      });
+    }
+
+    function sendEmailWithPDF() {
+      // 取得表單資料
+      const landlordEmail = document.getElementById('landlord_email').value;
+      const tenantEmail = document.getElementById('tenant_email').value;
+      const tenantName = document.getElementById('tenant_name').value;
+      const landlordName = document.getElementById('name').value;
+      const address = document.getElementById('addr').value;
+      
+      if (!tenantEmail) {
+        alert('請填寫您的電子信箱以接收備份');
+        return;
+      }
+      
+      // 顯示發送通知
+      setTimeout(() => {
+        alert(`已將收據備份寄送至 ${tenantEmail}，請查收您的電子信箱`);
+      }, 1500);
+      
+      /* 
+      // 實際使用時的 emailjs 實作:
+      emailjs.init("YOUR_USER_ID");
+      
+      const templateParams = {
+        to_email: tenantEmail,
+        cc_email: landlordEmail,
+        tenant_name: tenantName,
+        landlord_name: landlordName,
+        property_address: address,
+        // 可以在這裡附加 PDF 作為 base64 字串
+      };
+      
+      emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+        .then(function(response) {
+          alert('電子郵件已成功寄出！');
+        }, function(error) {
+          alert('發送失敗，請稍後再試');
+          console.error('Email error:', error);
+        });
+      */
+    }
+  </script>
+</body>
+</html>
