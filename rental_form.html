@@ -1,4 +1,4 @@
-<!-- 新版 rental_form.html：已加入條款與勾選區塊（勾選框置於條文前） -->
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -20,6 +20,7 @@
       max-width: 600px;
       margin: auto;
     }
+
     h2 {
       color: #00C300;
       font-size: 1.5rem;
@@ -54,28 +55,38 @@
       margin-top: 0.5rem;
       background-color: #fff;
     }
-    .checkbox-group {
+    .clause-box {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 10px;
       margin-top: 1rem;
     }
+    .checkbox-group {
+      margin-top: 1rem;
+      text-align: left;
+    }
     .checkbox-group label {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 0.8rem;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  text-align: left;
-  width: 100%;
-}
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      justify-content: flex-start;
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+      word-break: break-word;
+      white-space: normal;
+    }
     .checkbox-group input[type="checkbox"] {
-      margin-top: 0.2rem;
       flex-shrink: 0;
+      margin-top: 0.3rem;
+      width: 1.2rem;
+      height: 1.2rem;
     }
     .button-group {
       margin-top: 2rem;
       display: flex;
-      flex-direction: column;
       gap: 1rem;
+      flex-direction: column;
     }
     button {
       padding: 0.75rem;
@@ -95,12 +106,38 @@
       margin-top: 1rem;
       text-align: center;
     }
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+    }
+    .hidden {
+      display: none !important;
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 </head>
 <body>
+  <div id="loading-overlay" class="hidden">
+    <h2>正在生成PDF...</h2>
+    <p>請稍候，處理中</p>
+  </div>
+
   <div class="container" id="form-container">
-    <h2>租屋定金收據 LINE 簽屬</h2>
+
+  <h2>租屋定金收據LINE簽屬</h2>
+
 
     <div class="section-title">一、出租人（甲方）資料</div>
     <label>出租方／代理人：</label>
@@ -108,27 +145,26 @@
     <label>租賃地址：</label>
     <input type="text" id="addr">
     <label>租金（新台幣）：</label>
-    <input type="number" id="rent">
+    <input type="number" id="rent" min="0" step="1">
     <label>訂金（新台幣）：</label>
-    <input type="number" id="deposit">
+    <input type="number" id="deposit" min="0" step="1">
     <label>收訂後保留10天至：</label>
     <input type="date" id="reserve_date">
     <label>出租人 Email：</label>
     <input type="email" id="landlord_email">
-    <label>備註：</label>
-    <textarea id="tenant_note" rows="3" placeholder="如有其他說明事項，請在此填寫"></textarea>
-
+    <label>備註</label>
+    <textarea id="tenant_note" placeholder="如有其他說明事項，請在此填寫" rows="3" style="resize: vertical;"></textarea>
     <div class="button-group">
       <button onclick="shareToLine()">出租人填寫完畢 ➜ LINE 傳送給租客</button>
     </div>
 
     <div class="section-title">二、承租人（乙方）資料</div>
     <label>承租人姓名</label>
-    <input type="text" id="tenant_name">
+    <input type="text" id="tenant_name" placeholder="請輸入姓名">
     <label>聯絡電話</label>
-    <input type="tel" id="tenant_phone">
+    <input type="tel" id="tenant_phone" placeholder="請輸入電話">
     <label>電子信箱</label>
-    <input type="email" id="tenant_email">
+    <input type="email" id="tenant_email" placeholder="請輸入 Email">
 
     <div class="section-title">三、承租人條款同意確認</div>
     <div class="clause-box">
