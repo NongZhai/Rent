@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>租屋定金收據 預覽與下載</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -85,21 +85,26 @@
 
   <script>
     const params = new URLSearchParams(window.location.search);
+
     const fields = [
       'name', 'addr', 'rent', 'deposit', 'reserve_date',
-      'tenant_note', 'tenant_name', 'tenant_phone', 'tenant_email', 'signature'
+      'tenant_note', 'tenant_name', 'tenant_phone', 'tenant_email'
     ];
 
     fields.forEach(field => {
       const el = document.getElementById(field);
       if (el && params.get(field)) {
-        if (field === 'signature') {
-          el.src = decodeURIComponent(params.get(field));
-        } else {
-          el.textContent = decodeURIComponent(params.get(field));
-        }
+        el.textContent = decodeURIComponent(params.get(field));
       }
     });
+
+    // 從 sessionStorage 抓簽名圖
+    const signatureData = sessionStorage.getItem('signatureImage');
+    if (signatureData) {
+      document.getElementById('signature-img').src = signatureData;
+    } else {
+      document.getElementById('signature-img').alt = '簽名圖載入失敗';
+    }
 
     function downloadPDF() {
       const content = document.getElementById('pdf-content');
