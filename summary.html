@@ -123,13 +123,20 @@
 
     // 備註處理邏輯
     const noteEl = document.getElementById('tenant_note');
-    const noteValue = (data.tenant_note && data.tenant_note.trim() && data.tenant_note.trim() !== '無')
-      ? data.tenant_note.trim()
-      : '無';
-    noteEl.textContent = noteValue;
-    if (noteValue === '無') {
-      noteEl.classList.add('note-gray');
-    }
+
+let noteValue = '';
+if (typeof data.tenant_note === 'string') {
+  const trimmed = data.tenant_note.trim();
+  noteValue = (trimmed && trimmed !== '無') ? trimmed : '無';
+} else {
+  noteValue = '無';
+}
+
+noteEl.textContent = noteValue;
+if (noteValue === '無') {
+  noteEl.classList.add('note-gray');
+}
+
 
     // 簽名圖處理
     const signatureImg = document.getElementById('signature-img');
