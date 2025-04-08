@@ -222,16 +222,20 @@
   }
 
   function loadUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
-    fields.forEach(id => {
-      const input = document.getElementById(id);
-      if (params.has(id)) {
-        input.value = decodeURIComponent(params.get(id));
-        input.setAttribute('readonly', true);
+  const params = new URLSearchParams(window.location.search);
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
+  fields.forEach(id => {
+    const input = document.getElementById(id);
+    if (params.has(id)) {
+      const val = decodeURIComponent(params.get(id)).trim();
+      if (val !== '') {
+        input.value = val;
       }
-    });
-  }
+      input.setAttribute('readonly', true);
+    }
+  });
+}
+
 
   function shareToLine() {
     const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
