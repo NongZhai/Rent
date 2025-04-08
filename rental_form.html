@@ -122,7 +122,7 @@
       const canvas = document.getElementById('signature-pad');
       signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255,255,255)' });
       resizeCanvas();
-      loadUrlParams(); // 記得讀入網址參數
+      loadUrlParams();
     });
 
     function resizeCanvas() {
@@ -138,7 +138,7 @@
       signaturePad.clear();
     }
 
-    // ✅ 房東欄位帶入網址參數並設 readonly
+    // ✅ 將網址參數帶入欄位並鎖定（readonly）
     function loadUrlParams() {
       const params = new URLSearchParams(window.location.search);
       const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
@@ -151,52 +151,7 @@
       });
     }
 
-    // ✅ 導向 summary.html
-    function submitForm() {
-      const requiredFields = ['tenant_name', 'tenant_phone', 'tenant_email'];
-      let missing = [];
-
-      requiredFields.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el.value.trim()) {
-          el.style.borderColor = 'red';
-          missing.push(el.previousElementSibling.textContent.trim());
-        } else {
-          el.style.borderColor = '#ccc';
-        }
-      });
-
-      if (missing.length > 0) {
-        alert('請填寫以下欄位：\n' + missing.join('\n'));
-        return;
-      }
-
-      if (signaturePad.isEmpty()) {
-        alert("請在簽名欄上簽名");
-        return;
-      }
-
-      const signatureDataUrl = signaturePad.toDataURL();
-
-      const params = new URLSearchParams({
-        name: document.getElementById('name').value,
-        addr: document.getElementById('addr').value,
-        rent: document.getElementById('rent').value,
-        deposit: document.getElementById('deposit').value,
-        landlord_email: document.getElementById('landlord_email').value,
-        reserve_date: document.getElementById('reserve_date').value,
-        tenant_note: document.getElementById('tenant_note').value,
-        tenant_name: document.getElementById('tenant_name').value,
-        tenant_phone: document.getElementById('tenant_phone').value,
-        tenant_email: document.getElementById('tenant_email').value,
-        signature: signatureDataUrl
-      });
-
-      const url = `summary.html?${params.toString()}`;
-      window.location.href = url;
-    }
-
-    // ✅ 房東填好 ➜ 分享給租客
+    // ✅ 房東填好 ➜ 分享連結給租客
     function shareToLine() {
       const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
       let missing = [];
@@ -229,6 +184,52 @@
       const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
       const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：\n');
       window.location.href = `https://line.me/R/msg/text/?${text}${encodeURIComponent(url)}`;
+    }
+
+    // ✅ 租客填完 ➜ 送出帶到 summary.html（簽名圖用 sessionStorage）
+    function submitForm() {
+      const requiredFields = ['tenant_name', 'tenant_phone', 'tenant_email'];
+      let missing = [];
+
+      requiredFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el.value.trim()) {
+          el.style.borderColor = 'red';
+          missing.push(el.previousElementSibling.textContent.trim());
+        } else {
+          el.style.borderColor = '#ccc';
+        }
+      });
+
+      if (missing.length > 0) {
+        alert('請填寫以下欄位：\n' + missing.join('\n'));
+        return;
+      }
+
+      if (signaturePad.isEmpty()) {
+        alert("請在簽名欄上簽名");
+        return;
+      }
+
+      // ❗️將簽名圖 base64 存進 sessionStorage
+      const signatureDataUrl = signaturePad.toDataURL();
+      sessionStorage.setItem('signatureImage', signatureDataUrl);
+
+      const params = new URLSearchParams({
+        name: document.getElementById('name').value,
+        addr: document.getElementById('addr').value,
+        rent: document.getElementById('rent').value,
+        deposit: document.getElementById('deposit').value,
+        landlord_email: document.getElementById('landlord_email').value,
+        reserve_date: document.getElementById('reserve_date').value,
+        tenant_note: document.getElementById('tenant_note').value,
+        tenant_name: document.getElementById('tenant_name').value,
+        tenant_phone: document.getElementById('tenant_phone').value,
+        tenant_email: document.getElementById('tenant_email').value
+      });
+
+      const url = `summary.html?${params.toString()}`;
+      window.location.href = url;
     }
   </script>
 </body>
