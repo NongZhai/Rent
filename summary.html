@@ -84,8 +84,10 @@
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
+    // 讀取表單資料
+    const data = JSON.parse(sessionStorage.getItem('rentalForm') || '{}');
 
+    // 將資料填入畫面
     const fields = [
       'name', 'addr', 'rent', 'deposit', 'reserve_date',
       'tenant_note', 'tenant_name', 'tenant_phone', 'tenant_email'
@@ -93,17 +95,17 @@
 
     fields.forEach(field => {
       const el = document.getElementById(field);
-      if (el && params.get(field)) {
-        el.textContent = decodeURIComponent(params.get(field));
+      if (el && data[field]) {
+        el.textContent = data[field];
       }
     });
 
-    // 從 sessionStorage 抓簽名圖
-    const signatureData = sessionStorage.getItem('signatureImage');
-    if (signatureData) {
-      document.getElementById('signature-img').src = signatureData;
+    // 顯示簽名圖片
+    const signatureImg = document.getElementById('signature-img');
+    if (data.signature) {
+      signatureImg.src = data.signature;
     } else {
-      document.getElementById('signature-img').alt = '簽名圖載入失敗';
+      signatureImg.alt = '無簽名圖';
     }
 
     function downloadPDF() {
@@ -119,7 +121,7 @@
 
         const today = new Date();
         const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
-        const fileName = `租屋定金收據_${params.get('tenant_name') || '租客'}_${dateStr}.pdf`;
+        const fileName = `租屋定金收據_${data.tenant_name || '租客'}_${dateStr}.pdf`;
 
         pdf.save(fileName);
       });
