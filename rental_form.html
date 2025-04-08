@@ -76,7 +76,7 @@
 </head>
 <body>
   <div class="container" id="form-container">
-    <h2>租屋定金收據LINE簽屬</h2>
+    <h2>租屋定金收據 LINE 簽屬</h2>
 
     <div class="section-title">一、出租人（甲方）資料</div>
     <label>出租方／代理人：</label>
@@ -138,7 +138,6 @@
       signaturePad.clear();
     }
 
-    // ✅ 將網址參數帶入欄位並鎖定（readonly）
     function loadUrlParams() {
       const params = new URLSearchParams(window.location.search);
       const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
@@ -151,7 +150,6 @@
       });
     }
 
-    // ✅ 房東填好 ➜ 分享連結給租客
     function shareToLine() {
       const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
       let missing = [];
@@ -186,7 +184,6 @@
       window.location.href = `https://line.me/R/msg/text/?${text}${encodeURIComponent(url)}`;
     }
 
-    // ✅ 租客填完 ➜ 送出帶到 summary.html（簽名圖用 sessionStorage）
     function submitForm() {
       const requiredFields = ['tenant_name', 'tenant_phone', 'tenant_email'];
       let missing = [];
@@ -211,11 +208,8 @@
         return;
       }
 
-      // ❗️將簽名圖 base64 存進 sessionStorage
-      const signatureDataUrl = signaturePad.toDataURL();
-      sessionStorage.setItem('signatureImage', signatureDataUrl);
-
-      const params = new URLSearchParams({
+      // 將所有欄位與簽名圖存進 sessionStorage
+      const formData = {
         name: document.getElementById('name').value,
         addr: document.getElementById('addr').value,
         rent: document.getElementById('rent').value,
@@ -225,14 +219,14 @@
         tenant_note: document.getElementById('tenant_note').value,
         tenant_name: document.getElementById('tenant_name').value,
         tenant_phone: document.getElementById('tenant_phone').value,
-        tenant_email: document.getElementById('tenant_email').value
-      });
+        tenant_email: document.getElementById('tenant_email').value,
+        signature: signaturePad.toDataURL()
+      };
 
-      const url = `summary.html?${params.toString()}`;
-      window.location.href = url;
+      sessionStorage.setItem('rentalForm', JSON.stringify(formData));
+      window.location.href = 'summary.html';
     }
   </script>
 </body>
 </html>
-
 
