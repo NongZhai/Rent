@@ -296,17 +296,35 @@ function shareToLine() {
 
   function loadUrlParams() {
   const params = new URLSearchParams(window.location.search);
-  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
   fields.forEach(id => {
     const input = document.getElementById(id);
     if (params.has(id)) {
       const val = decodeURIComponent(params.get(id)).trim();
-      if (val !== '') {
-        input.value = val;
-      }
+      if (val !== '') input.value = val;
       input.setAttribute('readonly', true);
     }
   });
+
+  // 備註處理
+  const noteOption = document.getElementById('note_option');
+  const noteTextarea = document.getElementById('tenant_note');
+  if (params.has('tenant_note')) {
+    const note = decodeURIComponent(params.get('tenant_note')).trim();
+    if (note === '無') {
+      noteOption.value = 'none';
+      noteTextarea.style.display = 'none';
+    } else {
+      noteOption.value = 'custom';
+      noteTextarea.value = note;
+      noteTextarea.style.display = 'block';
+    }
+
+    // ✅ 鎖定備註下拉選與輸入欄
+    noteOption.setAttribute('disabled', true);
+    noteTextarea.setAttribute('readonly', true);
+    noteTextarea.style.backgroundColor = '#f1f1f1';  // 可選：讓背景變灰顯示鎖定
+  }
 }
 
 
