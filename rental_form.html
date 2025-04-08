@@ -152,9 +152,13 @@
     <input type="date" id="reserve_date">
     <label>出租人 Email：</label>
     <input type="email" id="landlord_email">
-    <label>備註</label>
-    <textarea id="tenant_note" placeholder="如有其他說明事項，請在此填寫" rows="3" style="resize: vertical;"></textarea>
-    <div class="button-group">
+    <<label>備註</label>
+<select id="note_option" onchange="toggleNoteField()">
+  <option value="none">無備註</option>
+  <option value="custom">有備註</option>
+</select>
+<textarea id="tenant_note" placeholder="如有其他說明事項，請在此填寫" rows="3" style="resize: vertical; display: none;"></textarea>
+
       <button onclick="shareToLine()">出租人填寫完畢 ➜ LINE 傳送給租客</button>
     </div>
 
@@ -207,6 +211,75 @@
     resizeCanvas();
     loadUrlParams();
   });
+function toggleNoteField() {
+  const noteOption = document.getElementById('note_option').value;
+  const noteTextarea = document.getElementById('tenant_note');
+  noteTextarea.style.display = (noteOption === 'custom') ? 'block' : 'none';
+}
+function loadUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
+  fields.forEach(id => {
+    const input = document.getElementById(id);
+    if (params.has(id)) {
+      const val = decodeURIComponent(params.get(id)).trim();
+      if (val !== '') input.value = val;
+      input.setAttribute('readonly', true);
+    }
+  });
+
+  // 備註處理
+  const noteOption = document.getElementById('note_option');
+  const noteTextarea = document.getElementById('tenant_note');
+  if (params.has('tenant_note')) {
+    const note = decodeURIComponent(params.get('tenant_note')).trim();
+    if (note === '無') {
+      noteOption.value = 'none';
+      toggleNoteField();
+    } else {
+      noteOption.value = 'custom';
+      toggleNoteField();
+      noteTextarea.value = note;
+    }
+    noteOption.setAttribute('disabled', true);
+    noteTextarea.setAttribute('readonly', true);
+  }
+}
+function shareToLine() {
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
+  let missing = [];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el.value.trim()) {
+      el.style.borderColor = 'red';
+      missing.push(el.previousElementSibling.textContent.trim());
+    } else {
+      el.style.borderColor = '#ccc';
+    }
+  });
+  if (missing.length > 0) {
+    alert('請先填好以下欄位：\n' + missing.join('\n'));
+    return;
+  }
+
+  // 備註部分
+  const noteOption = document.getElementById('note_option').value;
+  let noteValue = (noteOption === 'custom') ? document.getElementById('tenant_note').value.trim() : '無';
+
+  const params = new URLSearchParams({
+    name: document.getElementById('name').value,
+    addr: document.getElementById('addr').value,
+    rent: document.getElementById('rent').value,
+    deposit: document.getElementById('deposit').value,
+    landlord_email: document.getElementById('landlord_email').value,
+    reserve_date: document.getElementById('reserve_date').value,
+    tenant_note: noteValue || '無'
+  });
+
+  const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：\n');
+  window.location.href = `https://line.me/R/msg/text/?${text}${encodeURIComponent(url)}`;
+}
 
   function resizeCanvas() {
     const canvas = document.getElementById('signature-pad');
