@@ -1,4 +1,3 @@
-<!-- 檔案：rental_form.html -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -54,12 +53,6 @@
       margin-top: 0.5rem;
       background-color: #fff;
     }
-    .checkbox-group label {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
     .button-group {
       margin-top: 2rem;
       display: flex;
@@ -100,7 +93,11 @@
     <input type="email" id="landlord_email">
     <label>備註：</label>
     <textarea id="tenant_note" rows="3" placeholder="如有其他說明事項，請在此填寫"></textarea>
-    
+
+    <div class="button-group">
+      <button onclick="shareToLine()">出租人填寫完畢 ➜ LINE 傳送給租客</button>
+    </div>
+
     <div class="section-title">二、承租人（乙方）資料</div>
     <label>承租人姓名</label>
     <input type="text" id="tenant_name">
@@ -125,9 +122,8 @@
       const canvas = document.getElementById('signature-pad');
       signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255,255,255)' });
       resizeCanvas();
+      loadUrlParams(); // 記得讀入網址參數
     });
-
-    window.addEventListener("resize", resizeCanvas);
 
     function resizeCanvas() {
       const canvas = document.getElementById('signature-pad');
@@ -142,8 +138,22 @@
       signaturePad.clear();
     }
 
+    // ✅ 房東欄位帶入網址參數並設 readonly
+    function loadUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_note'];
+      fields.forEach(id => {
+        const input = document.getElementById(id);
+        if (params.has(id)) {
+          input.value = decodeURIComponent(params.get(id));
+          input.setAttribute('readonly', true);
+        }
+      });
+    }
+
+    // ✅ 導向 summary.html
     function submitForm() {
-      const requiredFields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date', 'tenant_name', 'tenant_phone', 'tenant_email'];
+      const requiredFields = ['tenant_name', 'tenant_phone', 'tenant_email'];
       let missing = [];
 
       requiredFields.forEach(id => {
@@ -185,7 +195,43 @@
       const url = `summary.html?${params.toString()}`;
       window.location.href = url;
     }
+
+    // ✅ 房東填好 ➜ 分享給租客
+    function shareToLine() {
+      const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
+      let missing = [];
+
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el.value.trim()) {
+          el.style.borderColor = 'red';
+          missing.push(el.previousElementSibling.textContent.trim());
+        } else {
+          el.style.borderColor = '#ccc';
+        }
+      });
+
+      if (missing.length > 0) {
+        alert('請先填好以下欄位：\n' + missing.join('\n'));
+        return;
+      }
+
+      const params = new URLSearchParams({
+        name: document.getElementById('name').value,
+        addr: document.getElementById('addr').value,
+        rent: document.getElementById('rent').value,
+        deposit: document.getElementById('deposit').value,
+        landlord_email: document.getElementById('landlord_email').value,
+        reserve_date: document.getElementById('reserve_date').value,
+        tenant_note: document.getElementById('tenant_note').value
+      });
+
+      const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+      const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：\n');
+      window.location.href = `https://line.me/R/msg/text/?${text}${encodeURIComponent(url)}`;
+    }
   </script>
 </body>
 </html>
+
 
