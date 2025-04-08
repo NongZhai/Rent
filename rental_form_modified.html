@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>租屋定金收據（LINE簽署版）</title>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h2 {
+      color: #00C300;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-weight: bold;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    input[readonly] {
+      background: #f1f1f1;
+      color: #555;
+    }
+    .signature-box {
+      border: 1px dashed #999;
+      height: 150px;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      background-color: #fff;
+    }
+    .clause-box {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+    }
+    .checkbox-group {
+      margin-top: 1rem;
+      text-align: left;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      justify-content: flex-start;
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+      word-break: break-word;
+      white-space: normal;
+    }
+    .checkbox-group input[type="checkbox"] {
+      flex-shrink: 0;
+      margin-top: 0.3rem;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+    .button-group {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-direction: column;
+    }
+    button {
+      padding: 0.75rem;
+      background-color: #00C300;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #00a800;
+    }
+    .subtext {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+</head>
+<body>
+  <div id="loading-overlay" class="hidden">
+    <h2>正在生成PDF...</h2>
+    <p>請稍候，處理中</p>
+  </div>
+
+  <div class="container" id="form-container">
+
+  <h2>租屋定金收據LINE簽屬</h2>
+
+
+    <div class="section-title">一、出租人（甲方）資料</div>
+    <label>出租方／代理人：</label>
+    <input type="text" id="name">
+    <label>租賃地址：</label>
+    <input type="text" id="addr">
+    <label>租金（新台幣）：</label>
+    <input type="number" id="rent" min="0" step="1">
+    <label>訂金（新台幣）：</label>
+    <input type="number" id="deposit" min="0" step="1">
+    <label>收訂後保留10天至：</label>
+    <input type="date" id="reserve_date">
+    <label>出租人 Email：</label>
+    <input type="email" id="landlord_email">
+    
+<label>備註</label>
+<select id="note_option" onchange="toggleNoteInput()">
+  <option value="none">無備註</option>
+  <option value="has">有備註</option>
+</select>
+<textarea id="tenant_note" placeholder="如有其他說明事項，請在此填寫" rows="3" style="resize: vertical; display: none;"></textarea>
+
+    <div class="button-group">
+      <button onclick="shareToLine()">出租人填寫完畢 ➜ LINE 傳送給租客</button>
+    </div>
+
+    <div class="section-title">二、承租人（乙方）資料</div>
+    <label>承租人姓名</label>
+    <input type="text" id="tenant_name" placeholder="請輸入姓名">
+    <label>聯絡電話</label>
+    <input type="tel" id="tenant_phone" placeholder="請輸入電話">
+    <label>電子信箱</label>
+    <input type="email" id="tenant_email" placeholder="請輸入 Email">
+
+    <div class="section-title">三、承租人條款同意確認</div>
+    <div class="clause-box">
+      <ul style="padding-left: 1.2rem; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+        <li>本租期為一年。</li>
+        <li>仲介服務費為半個月租金，於簽約當日一併支付。</li>
+        <li>訂金為保留租賃意願之用，一旦審核通過即成立契約預約。</li>
+        <li>甲方同意後，因甲方之事由致不能履行時，應雙倍返還定金。</li>
+        <li>保留期間內，因乙方之事由致不能履行時，定金不得請求返還。</li>
+      </ul>
+    </div>
+
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="check1">我了解並同意相關仲介服務費條款。</label>
+      <label><input type="checkbox" id="check2">我已詳細閱讀並同意上述條款內容，並確認提供資料為真實無誤。</label>
+      <label><input type="checkbox" id="check3">本人了解，本訂金為租賃意願之擔保，並不代表已完成承租程序，仍需經出租人進行資料審核。</label>
+      <label><input type="checkbox" id="check4">我了解本收據具《民法第249條》所定之法律效力，並同意受其約束。</label>
+    </div>
+
+<div class="section-title">四、承租人簽名確認</div>
+<div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+  <canvas id="signature-pad" class="signature-box" style="flex: 1 1 300px;"></canvas>
+  <img src="./signtip (2).png" alt="簽名提示圖" style="width: 120px; max-width: 40%; object-fit: contain;" />
+</div>
+<p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">若您使用 iPhone，建議以另一隻手輕觸螢幕完成簽名。</p>
+
+    <div class="button-group">
+      <button onclick="clearSignature()">清除簽名</button>
+      <button onclick="submitForm()">送出 ➜ 預覽與下載 PDF</button>
+    </div>
+    <p class="subtext">請填寫表單資訊並簽名確認。</p>
+  </div>
+
+  <script>
+  let signaturePad;
+
+  
+function toggleNoteInput() {
+  const noteOption = document.getElementById('note_option').value;
+  const noteInput = document.getElementById('tenant_note');
+  if (noteOption === 'has') {
+    noteInput.style.display = 'block';
+    noteInput.removeAttribute('readonly');
+  } else {
+    noteInput.style.display = 'none';
+    noteInput.value = '';
+    noteInput.setAttribute('readonly', true);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('signature-pad');
+    signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255,255,255)' });
+    resizeCanvas();
+    loadUrlParams();
+  });
+
+  function resizeCanvas() {
+    const canvas = document.getElementById('signature-pad');
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+    signaturePad.clear();
+  }
+
+  function clearSignature() {
+    signaturePad.clear();
+  }
+
+  
+function loadUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
+  fields.forEach(id => {
+    const input = document.getElementById(id);
+    if (params.has(id)) {
+      const val = decodeURIComponent(params.get(id)).trim();
+      if (val !== '') input.value = val;
+      input.setAttribute('readonly', true);
+    }
+  });
+
+  // 備註處理
+  const noteOption = document.getElementById('note_option');
+  const tenantNote = document.getElementById('tenant_note');
+  if (params.has('tenant_note')) {
+    const note = decodeURIComponent(params.get('tenant_note')).trim();
+    if (note !== '') {
+      noteOption.value = 'has';
+      tenantNote.value = note;
+      tenantNote.style.display = 'block';
+    } else {
+      noteOption.value = 'none';
+      tenantNote.value = '';
+      tenantNote.style.display = 'none';
+    }
+    noteOption.setAttribute('disabled', true);
+    tenantNote.setAttribute('readonly', true);
+  }
+}
+
+      input.setAttribute('readonly', true);
+    }
+  });
+}
+
+
+  
+function shareToLine() {
+  const fields = ['name', 'addr', 'rent', 'deposit', 'landlord_email', 'reserve_date'];
+  let missing = [];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el.value.trim()) {
+      el.style.borderColor = 'red';
+      missing.push(el.previousElementSibling.textContent.trim());
+    } else {
+      el.style.borderColor = '#ccc';
+    }
+  });
+
+  if (missing.length > 0) {
+    alert('請先填好以下欄位：
+' + missing.join('
+'));
+    return;
+  }
+
+  const noteOption = document.getElementById('note_option').value;
+  const tenantNote = document.getElementById('tenant_note').value.trim();
+  const noteValue = noteOption === 'has' && tenantNote !== '' ? tenantNote : '無';
+
+  const params = new URLSearchParams({
+    name: document.getElementById('name').value,
+    addr: document.getElementById('addr').value,
+    rent: document.getElementById('rent').value,
+    deposit: document.getElementById('deposit').value,
+    landlord_email: document.getElementById('landlord_email').value,
+    reserve_date: document.getElementById('reserve_date').value,
+    tenant_note: noteValue
+  });
+
+  const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：
+');
+  window.location.href = `https://line.me/R/msg/text/?${text}${encodeURIComponent(url)}`;
+}
+ else {
+        el.style.borderColor = '#ccc';
+      }
+    });
+    if (missing.length > 0) {
+      alert('請先填好以下欄位：\n' + missing.join('\n'));
+      return;
+    }
+    const params = new URLSearchParams({
+      name: document.getElementById('name').value,
+      addr: document.getElementById('addr').value,
+      rent: document.getElementById('rent').value,
+      deposit: document.getElementById('deposit').value,
+      landlord_email: document.getElementById('landlord_email').value,
+      reserve_date: document.getElementById('reserve_date').value,
+      tenant_note: document.getElementById('tenant_note').value
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    const text = encodeURIComponent('這是您的租屋定金表單連結，請填寫後簽名確認：\n');
+    window.location.href = `https://line.me/R/msg/text/?${text}${encodeURIComponent(url)}`;
+  }
+
+  function submitForm() {
+    const requiredFields = ['tenant_name', 'tenant_phone', 'tenant_email'];
+    let missing = [];
+    requiredFields.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.style.borderColor = 'red';
+        missing.push(el.previousElementSibling.textContent.trim());
+      } else {
+        el.style.borderColor = '#ccc';
+      }
+    });
+
+    if (missing.length > 0) {
+      alert('請填寫以下欄位：\n' + missing.join('\n'));
+      return;
+    }
+
+    // 檢查條款是否都勾選
+    const checks = ['check1', 'check2', 'check3', 'check4'];
+    const unchecked = checks.filter(id => !document.getElementById(id).checked);
+    if (unchecked.length > 0) {
+      alert('請確認並勾選所有條款同意項目');
+      return;
+    }
+
+    // 檢查簽名
+    if (signaturePad.isEmpty()) {
+      alert("請在簽名欄上簽名");
+      return;
+    }
+
+    // 收集資料
+    const formData = {
+      name: document.getElementById('name').value,
+      addr: document.getElementById('addr').value,
+      rent: document.getElementById('rent').value,
+      deposit: document.getElementById('deposit').value,
+      landlord_email: document.getElementById('landlord_email').value,
+      reserve_date: document.getElementById('reserve_date').value,
+      tenant_note: document.getElementById('tenant_note').value,
+      tenant_name: document.getElementById('tenant_name').value,
+      tenant_phone: document.getElementById('tenant_phone').value,
+      tenant_email: document.getElementById('tenant_email').value,
+      signature: signaturePad.toDataURL()
+    };
+
+    // 儲存進 sessionStorage 並跳轉
+    sessionStorage.setItem('rentalForm', JSON.stringify(formData));
+    window.location.href = 'summary.html';
+  }
+</script>
+
+</body>
+</html>
+
