@@ -1,162 +1,125 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>社畜星球</title>
+  <meta charset="UTF-8">
+  <title>租屋定金收據 預覽與下載</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #f3efe7;
-      font-family: 'Courier New', monospace;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #f0f0f0;
+      padding: 2rem;
     }
-
-    .phone {
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 9 / 16;
-      background: #fffaf5;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
+    #pdf-content {
+      background: white;
+      padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
-    .header {
-      background-color: #e3d9cf;
+    h2 {
       text-align: center;
-      padding: 12px;
+      color: #00C300;
+      margin-bottom: 2rem;
+    }
+    .section {
+      margin-bottom: 1rem;
+    }
+    .label {
       font-weight: bold;
-      color: #5e4b45;
-      font-size: 16px;
+      display: inline-block;
+      width: 130px;
     }
-
-    .main {
-      flex: 1;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
+    .signature {
+      margin-top: 2rem;
     }
-
-    .title {
-      font-size: 14px;
-      color: #7a5c54;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .character {
-      width: 140px;
-      image-rendering: pixelated;
-      margin-bottom: 12px;
-    }
-
-    .emotion {
-      font-size: 13px;
-      color: #5e4b45;
-      background: #f6f4f2;
+    .signature img {
+      max-width: 300px;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      width: 100%;
-      text-align: center;
-      margin-bottom: 16px;
+      margin-top: 0.5rem;
     }
-
-    .message {
-      background: #f8f4f1;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 13px;
-      color: #4e4740;
-      width: 100%;
-      margin-bottom: 16px;
+    .download {
       text-align: center;
-      box-shadow: inset 0 0 4px rgba(0,0,0,0.03);
+      margin-top: 2rem;
     }
-
-    .choices {
-      width: 100%;
-    }
-
-    .choice {
-      background: #f2efec;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 10px;
-      font-size: 14px;
-      margin-bottom: 10px;
-      text-align: center;
+    button {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      background-color: #00C300;
+      color: white;
+      border: none;
+      border-radius: 10px;
       cursor: pointer;
-      color: #3d3633;
     }
-
-    .choice:hover {
-      background: #e0ddd9;
-    }
-
-    .progress {
-      width: 100%;
-      padding: 10px;
-      text-align: center;
-    }
-
-    .progress-label {
-      font-size: 12px;
-      color: #8a817c;
-      margin-bottom: 6px;
-    }
-
-    .progress-bar {
-      height: 10px;
-      width: 90%;
-      background: #e0ddd9;
-      border-radius: 5px;
-      margin: 0 auto;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      width: 0.1%;
-      height: 100%;
-      background: #a1866f;
+    button:hover {
+      background-color: #009a00;
     }
   </style>
 </head>
 <body>
-  <div class="phone">
-    <div class="header">社畜星球</div>
-    <div class="main">
-      <div class="title">「地球還有我這種人嗎？」</div>
-      <img src="A_pixel_art_animated_GIF_features_a_young_woman_de.png" class="character" alt="角色動圖" />
-      <div class="emotion">
-        😩 每天睜開眼，就是為了再撐一天。<br>
-        😐 然後笑著裝沒事。
-      </div>
-      <div class="message">
-        🛰️ 你收到一則來自社畜星的某處訊號：<br>
-        <em>「剛剛在廁所補妝時差點崩潰」</em>
-      </div>
-      <div class="choices">
-        <div class="choice">【吃什麼早餐？】</div>
-        <div class="choice">【今天想請假嗎？】</div>
-        <div class="choice">【你還想買房嗎？】</div>
-      </div>
-    </div>
-    <div class="progress">
-      <div class="progress-label">根據你現在的薪水，距離買房完成度：還有約 327 年</div>
-      <div class="progress-bar"><div class="progress-fill"></div></div>
+
+  <div id="pdf-content">
+    <h2>租屋定金收據</h2>
+
+    <div class="section"><span class="label">出租人：</span><span id="name"></span></div>
+    <div class="section"><span class="label">租賃地址：</span><span id="addr"></span></div>
+    <div class="section"><span class="label">租金：</span><span id="rent"></span> 元</div>
+    <div class="section"><span class="label">訂金：</span><span id="deposit"></span> 元</div>
+    <div class="section"><span class="label">保留至：</span><span id="reserve_date"></span></div>
+    <div class="section"><span class="label">備註：</span><span id="tenant_note"></span></div>
+    <div class="section"><span class="label">承租人姓名：</span><span id="tenant_name"></span></div>
+    <div class="section"><span class="label">聯絡電話：</span><span id="tenant_phone"></span></div>
+    <div class="section"><span class="label">電子信箱：</span><span id="tenant_email"></span></div>
+
+    <div class="signature">
+      <div class="label">簽名：</div>
+      <img id="signature-img" alt="簽名圖">
     </div>
   </div>
+
+  <div class="download">
+    <button onclick="downloadPDF()">下載 PDF</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const fields = [
+      'name', 'addr', 'rent', 'deposit', 'reserve_date',
+      'tenant_note', 'tenant_name', 'tenant_phone', 'tenant_email', 'signature'
+    ];
+
+    fields.forEach(field => {
+      const el = document.getElementById(field);
+      if (el && params.get(field)) {
+        if (field === 'signature') {
+          el.src = decodeURIComponent(params.get(field));
+        } else {
+          el.textContent = decodeURIComponent(params.get(field));
+        }
+      }
+    });
+
+    function downloadPDF() {
+      const content = document.getElementById('pdf-content');
+      html2canvas(content, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+        const fileName = `租屋定金收據_${params.get('tenant_name') || '租客'}_${dateStr}.pdf`;
+
+        pdf.save(fileName);
+      });
+    }
+  </script>
 </body>
 </html>
+
